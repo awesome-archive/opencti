@@ -7,7 +7,7 @@ sidebar_label: Development environment
 ## Prerequisites
 
 - Docker
-- Node.JS (>= 10)
+- Node.JS (>= 12.* < 13.0.0)
 - Python (>= 3)
 - Yarn (>= 1.16)
 
@@ -22,26 +22,24 @@ $ sudo apt-get update && sudo apt-get install yarn
 
 ### Docker stack
 
-As OpenCTI has a dependency to ElasticSearch, you have to set the *vm.max_map_count* before running the containers, as mentionned in the [ElasticSearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode).
+As OpenCTI has a dependency to ElasticSearch, you have to set the *vm.max_map_count* before running the containers, as mentioned in the [ElasticSearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#docker-cli-run-prod-mode).
 
 ```bash
-$ sysctl -w vm.max_map_count=262144 
+$ sysctl -w vm.max_map_count=262144
 ```
 
-* Grakn (Database) - *localhost/48555*
-* Elastic search (Index and search) - *localhost/9200*
-* Redis (Distribution cache for websocket events) - *localhost/6379*
-* RabbitMQ (Message broker for background tasks) - *localhost/5672*
+Clone the latest version of the dev docker compose and start
 
 ```bash
-$ docker-compose -f ./docker/docker-compose-dev.yml up -d
+$ git clone https://github.com/OpenCTI-Platform/docker.git
+$ cd docker
+$ docker-compose -f ./docker-compose-dev.yml up -d
 ```
 
 ## Clone the project
 
 ```bash
-$ mkdir /path/to/your/app && cd /path/to/your/app
-$ git clone --recursive https://github.com/Luatix/opencti.git
+$ git clone https://github.com/OpenCTI-Platform/opencti.git
 $ cd opencti
 ```
 
@@ -50,7 +48,7 @@ $ cd opencti
 ### Install the API dependencies
 
 ```bash
-$ cd opencti-graphql
+$ cd opencti-platform/sopencti-graphql
 $ yarn install
 ```
 
@@ -63,12 +61,7 @@ $ yarn install
 ### Install the worker dependencies
 
 ```bash
-$ pip3 install -r requirements.txt
-```
-
-### Install the integration dependencies
-
-```bash
+$ cd ../../opencti-worker
 $ pip3 install -r requirements.txt
 ```
 
@@ -82,6 +75,14 @@ $ pip3 install -r requirements.txt
 $ cp config/default.json config/development.json
 ```
 By default the configuration match the docker stack configuration.
+You just need to change the user part:
+```bash
+"admin": {
+  "email": "admin@opencti.io",
+  "password": "ChangeMe",
+  "token": "ChangeMe"
+}
+```
 
 #### Start
 
@@ -90,10 +91,7 @@ $ cd opencti-graphql
 $ yarn start
 ```
 
-The first execution will create and migrate the schema. The admin token will be generated and printed in the console. You need to copy this token for configuration of the worker / integration.
-```bash
-Token for user admin: <OpenCTI token>
-```
+The first execution will create and migrate the schema.
 
 ### Worker
 
@@ -103,29 +101,12 @@ Token for user admin: <OpenCTI token>
 $ cd opencti-worker
 $ cp config.yml.sample config.yml
 ```
-Change the *config.yml* file according to your <OpenCTI token>
+Change the *config.yml* file according to your <admin token>
 
 #### Start
 
 ```bash
-$ python3 worker_export.py &
-$ python3 worker_import.py &
-```
-
-### Integration
-
-#### Configure
-
-```bash
-$ cd opencti-integration
-$ cp config.yml.sample config.yml
-```
-Change the *config.yml* file according to your <OpenCTI token>
-
-#### Start
-
-```bash
-$ python3 connectors_scheduler.py
+$ python3 worker.py &
 ```
 
 ### Frontend
@@ -136,8 +117,6 @@ $ python3 connectors_scheduler.py
 $ cd opencti-frontend
 $ yarn start
 ```
-
-The default username is *admin@opencti.io* and the password is *admin*. Login and get the administrator token in your profile.
 
 ## Build for production use
 
